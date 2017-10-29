@@ -54,7 +54,6 @@ auth.set_access_token(access_token, access_token_secret)
 # return it in a JSON-formatted way
 api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 ## Write the rest of your code here!
-public_tweets = api.home_timeline()
 #### Recommended order of tasks: ####
 ## 1. Set up the caching pattern start -- the dictionary and the try/except
 ## 		statement shown in class.
@@ -66,47 +65,35 @@ try:
     cache_file.close() # Close the file, we're good, we got the data in a dictionary.
 except:
     CACHE_DICTION = {}
-serviceurl = 'http://search.twitter.com/search.json?geocode=29.762778,-95.383056,10.0mi&page=1&rpp=10'
 ## 2. Write a function to get twitter data that works with the caching pattern,
 ## 		so it either gets new data or caches data, depending upon what the input
 ##		to search for is.
-def getLocationWithCaching(loc):
-    url = serviceurl + urllib.parse.urlencode(
-        {'address': loc})
-
-    if loc in CACHE_DICTION:
+def getTweetWithCaching(tweet):
+    if tweet in CACHE_DICTION:
         print("Data was in the cache")
-        return CACHE_DICTION[loc]
     else:
+        v = api.search(q=tweet)
+        print(v['statuses'][0])
+        print(v['statuses'][0]['created_at'])
+        print(v['statuses'][0]['text'])
         print("Making a request for new data...")
-        uh = urllib.request.urlopen(url)
-        data = uh.read().decode()
         try:
-            CACHE_DICTION[loc] =  json.loads(data)
+            CACHE_DICTION[tweet] =  json.loads(data)
             dumped_json_cache = json.dumps(CACHE_DICTION)
             fw = open(CACHE_FNAME,"w")
             fw.write(dumped_json_cache)
             fw.close() # Close the open file
-            return CACHE_DICTION[loc]
+            return CACHE_DICTION[tweet]
         except:
-            print("Wasn't in cache and wasn't valid search either")
+            print("Wasn't in cache")
             return None
 
+for tweet in CACHE_DICTION:
+    tweet1 = input("enter search term: ")
+    data = getTweetWithCaching(tweet1)
+    print(type(data))
 
-print("TEXT: ")
-print("CREATED AT: ")
-print('\n')
 
-## 3. Using a loop, invoke your function, save the return value in a variable, and explore the
-##		data you got back!
-while True:
-    address = input('Enter location: ')
-    if len(address) < 1: break
-    data = getLocationWithCaching(address)
-    country = data["results"][0]["address_components"]
-    for d in country:
-        if 'country' in d["types"]:
-            print(d["short_name"])
 
 ## 4. With what you learn from the data -- e.g. how exactly to find the
 ##		text of each tweet in the big nested structure -- write code to print out
