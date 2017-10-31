@@ -3,6 +3,7 @@ import tweepy
 import requests
 import json
 import urllib.request, urllib.parse, urllib.error
+import sys
 ## SI 206 - HW
 ## COMMENT WITH:
 ## Your section day/time: Thursday 3-4PM
@@ -13,7 +14,6 @@ import urllib.request, urllib.parse, urllib.error
 ## user's choice (should use the Python input function), and prints out the Tweet text and the
 ## created_at value (note that this will be in GMT time) of the first FIVE tweets with at least
 ## 1 blank line in between each of them, e.g.
-
 
 ## You should cache all of the data from this exercise in a file, and submit the cache file
 ## along with your assignment.
@@ -31,8 +31,6 @@ import urllib.request, urllib.parse, urllib.error
 
 ##SAMPLE OUTPUT
 ## See: https://docs.google.com/a/umich.edu/document/d/1o8CWsdO2aRT7iUz9okiCHCVgU5x_FyZkabu2l9qwkf8/edit?usp=sharing
-
-
 
 ## **** For extra credit, create another file called twitter_info.py that
 ## contains your consumer_key, consumer_secret, access_token, and access_token_secret,
@@ -68,18 +66,31 @@ except:
 ## 2. Write a function to get twitter data that works with the caching pattern,
 ## 		so it either gets new data or caches data, depending upon what the input
 ##		to search for is.
+def uprint(*objects, sep=' ', end='\n', file=sys.stdout):
+    enc = file.encoding
+    if enc == 'UTF-8':
+        print(*objects, sep=sep, end=end, file=file)
+    else:
+        f = lambda obj: str(obj).encode(enc, errors='backslashreplace').decode(enc)
+        print(*map(f, objects), sep=sep, end=end, file=file)
+
 def getTweetWithCaching(tweet):
     if tweet in CACHE_DICTION:
         print("Data was in the cache")
     else:
         v = api.search(q=tweet)
-        print(v['statuses'][0])
-        print(v['statuses'][0]['created_at'])
-        print(v['statuses'][0]['text'])
-        print("Making a request for new data...")
+        # print top 5 statuses related to search term
+        for status in range(5):
+            uprint("TEXT: ", v['statuses'][status]['text'])
+            uprint("CREATED AT: ", v['statuses'][status]['created_at'])
+            print('\n')
+            print('\n')
         try:
-            CACHE_DICTION[tweet] =  json.loads(data)
+            #value for key tweet is the result from api.serach()
+            CACHE_DICTION[tweet] =  v
+            #returns string from python dictionarys
             dumped_json_cache = json.dumps(CACHE_DICTION)
+            # write cache file from string
             fw = open(CACHE_FNAME,"w")
             fw.write(dumped_json_cache)
             fw.close() # Close the open file
@@ -87,14 +98,8 @@ def getTweetWithCaching(tweet):
         except:
             print("Wasn't in cache")
             return None
-
-for tweet in CACHE_DICTION:
-    tweet1 = input("enter search term: ")
+#run 3 different search terms
+for i in range(3):
+    tweet1 = input("Enter Tweet term: ")
+    print("fetching")
     data = getTweetWithCaching(tweet1)
-    print(type(data))
-
-
-
-## 4. With what you learn from the data -- e.g. how exactly to find the
-##		text of each tweet in the big nested structure -- write code to print out
-## 		content from 5 tweets, as shown in the linked example.
